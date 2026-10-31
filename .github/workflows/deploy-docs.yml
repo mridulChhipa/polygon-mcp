@@ -33,14 +33,17 @@ jobs:
         working-directory: ./polygon-docs
         run: npm ci
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Build & Export Static Documentation
         working-directory: ./polygon-docs
         run: npm run build
         env:
           GITHUB_ACTIONS: 'true'
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      - name: Ensure .nojekyll Exists
+        run: touch ./polygon-docs/dist/.nojekyll
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
