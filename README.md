@@ -24,6 +24,76 @@ Designed for seamless integration into **Claude Code**, **Cursor**, **Google Ant
 
 ---
 
+## Documentation Website
+
+The repository includes a complete, interactive **Neubrutalism-designed documentation website** with 26 comprehensive pages covering quickstarts, architecture deep-dives, protocol signing specs, tutorial walkthroughs, and full parameter references for all 10 MCP tools.
+
+You can access and run the documentation using whichever method fits your workflow:
+
+---
+
+### Method 1: Instant Offline Viewing (Zero `npm` / Zero Node.js Required)
+
+You do **not** need Node.js, `npm`, or any front-end setup installed. The entire static documentation site is already pre-built and committed into `polygon-docs/dist/index.html`.
+
+Launch the documentation instantly using Python's built-in HTTP server:
+```bash
+# From the repository root:
+python -m http.server 3000 -d polygon-docs/dist
+```
+Then open **[http://localhost:3000](http://localhost:3000)** in any browser.
+
+> **Why a Python server?** Modern web browsers enforce CORS security policies on local `file:///` URLs when loading JavaScript modules. Since competitive programming authors already have Python installed, `python -m http.server` provides an instant, zero-dependency local viewing experience without installing Node.js.
+
+---
+
+### Method 2: Running with Node.js & `npm`
+
+If you have Node.js installed and prefer running the Next.js development server or building from source:
+
+#### A. Live Development Server (Hot Reload)
+```bash
+cd polygon-docs
+npm install
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** to explore or edit the docs live.
+
+#### B. Building & Serving the Production Static Export
+```bash
+cd polygon-docs
+npm run build
+npm run start
+```
+`npm run build` compiles and exports the static site into `polygon-docs/dist/`, and `npm run start` serves `dist` locally on port 3000. You can also preview `dist` with Python:
+```bash
+python -m http.server 3000 -d dist
+```
+
+---
+
+### Method 3: Public Hosted Documentation (GitHub Pages)
+
+The documentation can also be hosted publicly on GitHub Pages at:
+👉 **`https://mridulchhipa.github.io/polygon-mcp/`**
+
+A pre-configured GitHub Actions workflow (`.github/workflows/deploy-docs.yml`) is included in the repository. Once enabled under repository **Settings &rarr; Pages &rarr; Source (GitHub Actions)**, any push to `main` will build and publish the docs automatically.
+
+---
+
+### What's Covered in the Docs?
+
+| Section | Key Content Covered |
+|---|---|
+| **🚀 Getting Started** | 5-Minute Quickstart, GitHub installation options, API key resolution hierarchy, and step-by-step setup for **both CLI and IDE** across Claude Code, Cursor, Antigravity, Windsurf, and Codex. |
+| **📐 Core Architecture** | Two-Tier MCP tool pattern, SHA-512 cryptographic signing, fail-fast local C++ `testlib.h` preflight engine, working copy & package lifecycle. |
+| **🛠️ MCP Tools Reference** | Tier 1 Workflows (`polygon_create_problem_bundle`, `polygon_sync_from_directory`, `polygon_build_and_verify`), Tier 2 Primitives, Resources, and Prompts. |
+| **📖 Guides & Tutorials** | End-to-end problem walkthrough from scratch, local folder synchronization, `testlib.h` generator best practices, and the official 11-point Codeforces Audit Checklist. |
+| **🌐 Transports & Deployment** | Stdio transport for local agents, Streamable HTTP for team servers, and Dockerized deployment. |
+| **❓ Troubleshooting** | Protocol quirks, clock skew handling, Windows UTF-8 fixes, and Codeforces package verification errors. |
+
+---
+
 ## Team Installation Options (GitHub)
 
 Choose the installation method that fits your workflow:
@@ -66,7 +136,13 @@ pip install -e .
 
 ## Client Integration Guide
 
-### 1. Claude Code (CLI)
+Choose your agent environment below. Every agent includes setup instructions for **both CLI and IDE**.
+
+---
+
+### 1. Anthropic Claude (CLI & IDE)
+
+#### A. Claude Code (CLI)
 Run a single command in your terminal:
 ```bash
 claude mcp add codeforces-polygon \
@@ -74,13 +150,61 @@ claude mcp add codeforces-polygon \
   -e POLYGON_API_SECRET="your_api_secret" \
   -- uvx --from git+https://github.com/mridulChhipa/polygon-mcp.git polygon-mcp
 ```
+*(Or if installed locally in your Python environment via `pip install git+...` or `pip install -e .`, use `-- python -m polygon_mcp.server`)*.
 
-*(Alternatively, if installed locally in your Python environment via `pip install git+...` or `pip install -e .`, use `-- python -m polygon_mcp.server`)*.
+#### B. Claude Desktop & Claude Extension (IDE)
+Add to your `claude_desktop_config.json`:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "codeforces-polygon": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/mridulChhipa/polygon-mcp.git",
+        "polygon-mcp"
+      ],
+      "env": {
+        "POLYGON_API_KEY": "your_api_key",
+        "POLYGON_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
 
 ---
 
-### 2. Cursor IDE
-1. Open **Cursor Settings** (`Ctrl + ,` or `Cmd + ,`) -> **Features** -> **MCP**.
+### 2. Cursor (CLI & IDE)
+
+#### A. Cursor CLI & Project Terminal
+Create a `.cursor/mcp.json` file in the root directory of your workspace or problem repository:
+```json
+{
+  "mcpServers": {
+    "codeforces-polygon": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/mridulChhipa/polygon-mcp.git",
+        "polygon-mcp"
+      ],
+      "env": {
+        "POLYGON_API_KEY": "your_api_key",
+        "POLYGON_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
+When teammates run `cursor .` or invoke Cursor CLI/terminal agents, the MCP server is discovered and activated automatically.
+
+#### B. Cursor IDE Settings (GUI)
+1. Open **Cursor Settings** (`Ctrl + ,` on Windows/Linux, `Cmd + ,` on macOS) -> **Features** -> **MCP**.
 2. Click **+ Add New MCP Server**.
 3. Fill in:
    - **Name**: `codeforces-polygon`
@@ -92,8 +216,20 @@ claude mcp add codeforces-polygon \
 
 ---
 
-### 3. Google Antigravity
-Add to your global `~/.gemini/config/mcp_config.json`:
+### 3. Google Antigravity (CLI & IDE)
+
+#### A. Antigravity CLI (`agy`)
+Register the server via terminal command:
+```bash
+agy mcp add codeforces-polygon \
+  --command "uvx" \
+  --args "--from git+https://github.com/mridulChhipa/polygon-mcp.git polygon-mcp" \
+  --env POLYGON_API_KEY="your_api_key" \
+  --env POLYGON_API_SECRET="your_api_secret"
+```
+
+#### B. Antigravity IDE
+Add the server entry to your global `~/.gemini/config/mcp_config.json` or project-level `.gemini/mcp.json`:
 ```json
 {
   "mcpServers": {
@@ -117,8 +253,32 @@ Add to your global `~/.gemini/config/mcp_config.json`:
 
 ---
 
-### 4. Claude Desktop
-Add to `claude_desktop_config.json` (`%APPDATA%\Claude\` on Windows, `~/Library/Application Support/Claude/` on macOS):
+### 4. Windsurf / Codeium Cascade (CLI & IDE)
+
+#### A. Windsurf CLI & Repository Configuration
+Create `.windsurf/mcp.json` or `.codeium/mcp.json` in your repository root:
+```json
+{
+  "mcpServers": {
+    "codeforces-polygon": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/mridulChhipa/polygon-mcp.git",
+        "polygon-mcp"
+      ],
+      "env": {
+        "POLYGON_API_KEY": "your_api_key",
+        "POLYGON_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
+
+#### B. Windsurf IDE UI & Global Configuration
+1. Open **Windsurf Settings** (`Ctrl + ,` / `Cmd + ,`) -> **Cascade** -> **MCP Servers**.
+2. Or edit `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
@@ -140,8 +300,20 @@ Add to `claude_desktop_config.json` (`%APPDATA%\Claude\` on Windows, `~/Library/
 
 ---
 
-### 5. Codex / Windsurf (Codeium)
-Add to `~/.codeium/windsurf/mcp_config.json`:
+### 5. VS Code & OpenAI Codex / Copilot (CLI & IDE)
+
+#### A. Codex / Terminal Agent / Aider (CLI)
+Export Polygon credentials in your terminal session and attach the MCP server to your CLI agent:
+```bash
+export POLYGON_API_KEY="your_api_key"
+export POLYGON_API_SECRET="your_api_secret"
+
+# Example: Run Aider or custom Codex agent with MCP tool pipe
+aider --mcp "uvx --from git+https://github.com/mridulChhipa/polygon-mcp.git polygon-mcp"
+```
+
+#### B. VS Code / GitHub Copilot Agent Mode / Cline / Roo Code (IDE)
+Add to your project's `.vscode/mcp.json` or Cline settings (`cline_mcp_settings.json`):
 ```json
 {
   "mcpServers": {
